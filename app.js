@@ -1,5 +1,6 @@
 const express = require('express')
 const app = express()
+const port = process.env.PORT ||3000
 const { Resolver } = require('dns');
 const resolver = new Resolver();
 resolver.setServers(['8.8.8.8']);
@@ -39,8 +40,8 @@ app.get('/', function (req, res) {
   }
 })
 
-app.listen((process.env.PORT ||3000), function () {
-  console.log('Example app listening on port 3000!')
+app.listen(port, function () {
+  console.log('Example app listening on port ' + port + '!')
 })
 
 function determineDNSProvider(records) {
