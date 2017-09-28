@@ -1,5 +1,7 @@
 const express = require('express')
 const app = express()
+const https = require("https");
+const http = require("http");
 const port = process.env.PORT ||3000
 const { Resolver } = require('dns');
 const resolver = new Resolver();
@@ -9,31 +11,30 @@ app.get('/', function (req, res) {
   var domain = req.query.domain
   if(domain && domain.includes('.')) {
     res.setHeader('Content-Type', 'text/plain')
-    // res.send(domain)
 
-    // resolver.resolve4(domain, (err, addresses) => {
-    //   if (err) throw err;
-    //
-    //   console.log(`addresses: ${JSON.stringify(addresses)}`);
-    //
-    //   addresses.forEach((a) => {
-    //     resolver.reverse(a, (err, hostnames) => {
-    //       if (err) {
-    //         throw err;
-    //       }
-    //       console.log(`reverse for ${a}: ${JSON.stringify(hostnames)}`);
-    //     });
-    //   });
-    // });
     resolver.resolveAny(domain, (err, records) => {
       response = {}
       response.domain = domain
-      if (records.length > 0)
-        response.dns_provider = determineDNSProvider(records)
-        response.records = records
-      res.send(JSON.stringify(response, null, 2))
-    });
+      response.dns_provider = determineDNSProvider(records)
 
+
+      var urlHttp = 'http://' + domain
+      http.get(urlHttp, httpRes => {
+        httpRes.headers.status = httpRes.statusCode
+        response.http_response = httpRes.headers
+
+
+        // var urlHttps = 'https://' + domain
+        // https.get(urlHttps, httpsRes => {
+        //   httpsRes.headers.status = httpsRes.statusCode
+        //   response.https_response = httpsRes.headers
+
+
+          response.records = records
+          res.send(JSON.stringify(response, null, 2))
+        // })
+      })
+    })
   } else {
     res.statusCode = 400
     res.end('Please add ?domain=example.com that includes at least one dot')
