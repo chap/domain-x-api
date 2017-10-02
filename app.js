@@ -71,6 +71,10 @@ function determineDNSProvider(records) {
       return 'DNS Made Easy'
     } else if (nsname.includes('pointhq')) {
       return 'PointDNS'
+    } else if (nsname.includes('hover')) {
+      return 'Hover'
+    } else if (nsname.includes('googledomains')) {
+      return 'Google Domains'
     } else {
       return '?'
     }
