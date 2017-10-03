@@ -2,39 +2,78 @@ const express = require('express')
 const app = express()
 const https = require("https");
 const http = require("http");
-const port = process.env.PORT ||3000
-const { Resolver } = require('dns');
-const resolver = new Resolver();
-resolver.setServers(['8.8.8.8']);
+const port = process.env.PORT || 4000
+const { Resolver } = require('dns')
+const resolver = new Resolver()
+resolver.setServers(['8.8.8.8'])
 
 app.get('/', function (req, res) {
   var domain = req.query.domain
   if(domain && domain.includes('.')) {
-    res.setHeader('Content-Type', 'text/plain')
+    res.setHeader('Content-Type', 'application/json')
+    res.setHeader('Access-Control-Allow-Origin', '*');
 
+    response = {}
+    response.domain = domain
     resolver.resolveAny(domain, (err, records) => {
-      response = {}
-      response.domain = domain
-      response.dns_provider = determineDNSProvider(records)
+      if(records) {
+        response.dns_provider = determineDNSProvider(records)
+      }
 
-
-      var urlHttp = 'http://' + domain
-      http.get(urlHttp, httpRes => {
-        httpRes.headers.status = httpRes.statusCode
-        response.http_response = httpRes.headers
-
-
-        // var urlHttps = 'https://' + domain
-        // https.get(urlHttps, httpsRes => {
-        //   httpsRes.headers.status = httpsRes.statusCode
-        //   response.https_response = httpsRes.headers
-
-
-          response.records = records
-          res.send(JSON.stringify(response, null, 2))
-        // })
-      })
+      response.records = records
+      res.send(response)
     })
+  } else {
+    res.statusCode = 400
+    res.end('Please add ?domain=example.com that includes at least one dot')
+  }
+})
+
+app.get('/curl', function (req, res) {
+  var domain = req.query.domain
+  if(domain && domain.includes('.')) {
+    res.setHeader('Content-Type', 'application/json')
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    var urlHttp = 'http://' + domain
+    http.get(urlHttp, httpRes => {
+      httpRes.headers.status = httpRes.statusCode
+      httpRes.headers.url = urlHttp
+      res.send(httpRes.headers)
+    })
+    .on('error', function(err) {
+      httpRes = {}
+      httpRes.url = urlHttp
+      httpRes.error = err
+      res.send(httpRes)
+    });
+
+  } else {
+    res.statusCode = 400
+    res.end('Please add ?domain=example.com that includes at least one dot')
+  }
+})
+
+app.get('/curl-ssl', function (req, res) {
+  var domain = req.query.domain
+  if(domain && domain.includes('.')) {
+    res.setHeader('Content-Type', 'application/json')
+    res.setHeader('Access-Control-Allow-Origin', '*');
+
+    var urlHttp = 'https://' + domain
+    https.get(urlHttp, httpRes => {
+      httpRes.headers.status = httpRes.statusCode
+      httpRes.headers.url = urlHttp
+
+      res.send(httpRes.headers)
+    })
+    .on('error', function(err) {
+      httpRes = {}
+      httpRes.url = urlHttp
+      httpRes.error = err
+      res.send(httpRes)
+    });
+
   } else {
     res.statusCode = 400
     res.end('Please add ?domain=example.com that includes at least one dot')
@@ -76,7 +115,7 @@ function determineDNSProvider(records) {
     } else if (nsname.includes('googledomains')) {
       return 'Google Domains'
     } else {
-      return '?'
+      return null
     }
   }
 }
