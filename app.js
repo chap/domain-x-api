@@ -7,7 +7,7 @@ const { Resolver } = require('dns')
 const resolver = new Resolver()
 resolver.setServers(['8.8.8.8'])
 
-app.get('/', function (req, res) {
+app.get('/api', function (req, res) {
   var domain = req.query.domain
   if(domain && domain.includes('.')) {
     res.setHeader('Content-Type', 'application/json')
@@ -29,7 +29,7 @@ app.get('/', function (req, res) {
   }
 })
 
-app.get('/curl', function (req, res) {
+app.get('/api/curl', function (req, res) {
   var domain = req.query.domain
   if(domain && domain.includes('.')) {
     res.setHeader('Content-Type', 'application/json')
@@ -54,7 +54,7 @@ app.get('/curl', function (req, res) {
   }
 })
 
-app.get('/curl-ssl', function (req, res) {
+app.get('/api/curl-ssl', function (req, res) {
   var domain = req.query.domain
   if(domain && domain.includes('.')) {
     res.setHeader('Content-Type', 'application/json')
